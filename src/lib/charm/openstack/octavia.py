@@ -304,6 +304,26 @@ def spare_amphora_pool_size(cls):
     return ch_core.hookenv.config('spare-pool-size')
 
 
+@charms_openstack.adapters.config_property
+def custom_haproxy_template(cls):
+    """Base64-encoded haproxy template used by amphorae
+
+    Side effect of reading this property is that the on-disk template file
+    is updated if it has changed.
+
+    :param cls: charms_openstack.adapters.ConfigurationAdapter derived class
+                instance.  Charm class instance is at cls.charm_instance.
+    :type: cls: charms_openstack.adapters.ConfiguartionAdapter
+    :returns: path to written on-disk custom haproxy.cfg template
+    :rtype: str
+    """
+    config = ch_core.hookenv.config('haproxy-template')
+    if config:
+        return cls.charm_instance.decode_and_write_template(
+            'haproxy-custom.cfg.j2',
+            config)
+
+
 # note plugin comes first to override the config_changed method as a mixin
 class OctaviaCharm(ch_plugins.PolicydOverridePlugin,
                    charms_openstack.charm.HAOpenStackCharm):
@@ -453,6 +473,23 @@ class OctaviaCharm(ch_plugins.PolicydOverridePlugin,
                            perms=0o750)
         ch_core.host.write_file(filename, base64.b64decode(encoded_data),
                                 group=self.group, perms=0o440)
+        return filename
+
+    def decode_and_write_template(self, filename, encoded_data):
+        """Write the custom haproxy template to disk.
+
+        :param filename: Name of file
+        :type filename: str
+        :param group: Group ownership
+        :type group: str
+        :param encoded_data: Base64 encoded data
+        :type encoded_data: str
+        :returns: Full path to file
+        :rtype: str
+        """
+        filename = os.path.join(OCTAVIA_DIR, filename)
+        ch_core.host.write_file(filename, base64.b64decode(encoded_data),
+                                group=self.group, perms=0o644)
         return filename
 
     @property
