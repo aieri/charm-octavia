@@ -120,3 +120,15 @@ options:
       time for new load balancers.
       .
       The default behaviour is to not maintain any spare servers.
+  haproxy-template:
+    type: string
+    default:
+    description: |
+      A base64-encoded Jinja template for the haproxy.cfg injected in the
+      amphorae. If set, the template will be written verbatim in the octavia
+      unit(s) and its path passed as an argument to the haproxy_template option
+      of octavia.conf
+      .
+      See the upstream documentation at https://docs.openstack.org/octavia/ocata/main/configref.html#haproxy_amphora.haproxy_template option
+      .
+      The default template can be found under https://github.com/openstack/octavia/tree/master/octavia/common/jinja/haproxy
